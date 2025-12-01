@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "spotify": {
+      "command": "node",
+      "args": [
+        "C:/Users/Yonsn/Desktop/MCP/spotify-mcp-server/build/index.js"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "getAuthStatus",
+        "startAuth",
+        "searchSpotify",
+        "setVolume",
+        "playMusic"
+      ]
+    }
+  }
+}

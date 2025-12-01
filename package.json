@@ -1,0 +1,29 @@
+{
+  "type": "module",
+  "name": "spotify-mcp-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "bin": {
+    "spotify-mcp": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "auth": "tsc && node build/auth.js"
+  },
+  "files": [
+    "build"
+  ],
+  "keywords": [],
+  "author": "",
+  "description": "Servidor MCP para controlar Spotify",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.1",
+    "@spotify/web-api-ts-sdk": "^1.2.0",
+    "open": "^10.1.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.8",
+    "typescript": "^5.8.2"
+  }
+}
