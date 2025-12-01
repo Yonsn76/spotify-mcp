@@ -6,3 +6,5 @@ sp-credentials.json
 build
 dist
 .DS_Store
+.kiro
+.github

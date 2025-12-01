@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import os from 'node:os';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ARCHIVO_CONFIG = path.join(__dirname, '../../sp-credentials.json');
+// Archivo para guardar tokens en home del usuario
+const ARCHIVO_TOKENS = path.join(os.homedir(), '.spotify-mcp-tokens.json');
 
 export interface ConfiguracionSpotify {
   clientId: string;
@@ -13,28 +13,51 @@ export interface ConfiguracionSpotify {
   refreshToken?: string;
 }
 
+interface TokensGuardados {
+  accessToken?: string;
+  refreshToken?: string;
+}
+
+function cargarTokens(): TokensGuardados {
+  try {
+    if (fs.existsSync(ARCHIVO_TOKENS)) {
+      return JSON.parse(fs.readFileSync(ARCHIVO_TOKENS, 'utf8'));
+    }
+  } catch {
+    // Si hay error, retornamos vacío
+  }
+  return {};
+}
+
+function guardarTokens(tokens: TokensGuardados): void {
+  fs.writeFileSync(ARCHIVO_TOKENS, JSON.stringify(tokens, null, 2), 'utf8');
+}
+
 export function cargarConfiguracion(): ConfiguracionSpotify {
-  if (!fs.existsSync(ARCHIVO_CONFIG)) {
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:8080/callback';
+
+  if (!clientId || !clientSecret) {
     throw new Error(
-      `Archivo de configuración no encontrado en ${ARCHIVO_CONFIG}. Crea uno con clientId, clientSecret y redirectUri.`,
+      'Faltan SPOTIFY_CLIENT_ID y/o SPOTIFY_CLIENT_SECRET en las variables de entorno del mcp.json'
     );
   }
 
-  try {
-    const config = JSON.parse(fs.readFileSync(ARCHIVO_CONFIG, 'utf8'));
-    if (!(config.clientId && config.clientSecret && config.redirectUri)) {
-      throw new Error(
-        'La configuración debe incluir clientId, clientSecret y redirectUri.',
-      );
-    }
-    return config;
-  } catch (error) {
-    throw new Error(
-      `Error al leer la configuración: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  const tokens = cargarTokens();
+
+  return {
+    clientId,
+    clientSecret,
+    redirectUri,
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+  };
 }
 
 export function guardarConfiguracion(config: ConfiguracionSpotify): void {
-  fs.writeFileSync(ARCHIVO_CONFIG, JSON.stringify(config, null, 2), 'utf8');
+  guardarTokens({
+    accessToken: config.accessToken,
+    refreshToken: config.refreshToken,
+  });
 }
