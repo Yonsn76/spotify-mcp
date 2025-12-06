@@ -1,27 +1,25 @@
 /**
  * Servidor MCP para controlar Spotify
- * Punto de entrada principal que registra todas las herramientas
+ * Versión optimizada con herramientas consolidadas (4 herramientas en lugar de 39)
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { herramientasAuth } from './tools/autenticacion.js';
-import { herramientasBiblioteca } from './tools/biblioteca.js';
-import { herramientasConsultas } from './tools/consultas.js';
-import { herramientasReproduccion } from './tools/reproduccion.js';
+import { herramientasAuth } from './tools/auth.js';
+import { herramientasPlayer } from './tools/player.js';
+import { herramientasInfo } from './tools/info.js';
+import { herramientasLibrary } from './tools/library.js';
 
-/** Configuración del servidor MCP */
 const servidor = new McpServer({
   name: 'spotify-mcp',
-  version: '1.0.0',
+  version: '2.0.0',
 });
 
-/** Registra todas las herramientas en el servidor */
 const todasLasHerramientas = [
   ...herramientasAuth,
-  ...herramientasConsultas,
-  ...herramientasReproduccion,
-  ...herramientasBiblioteca,
+  ...herramientasPlayer,
+  ...herramientasInfo,
+  ...herramientasLibrary,
 ];
 
 todasLasHerramientas.forEach((herramienta) => {
@@ -33,7 +31,6 @@ todasLasHerramientas.forEach((herramienta) => {
   );
 });
 
-/** Inicia el servidor con transporte stdio */
 async function iniciar() {
   const transporte = new StdioServerTransport();
   await servidor.connect(transporte);

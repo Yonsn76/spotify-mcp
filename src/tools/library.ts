@@ -1,0 +1,83 @@
+/**
+ * Herramienta consolidada de biblioteca y playlists
+ */
+import { z } from 'zod';
+import { ejecutarPeticion } from '../core/spotify.js';
+import type { ContextoExtra, Herramienta } from '../core/tipos.js';
+
+const spotifyLibrary: Herramienta<{
+  accion: z.ZodEnum<['save', 'remove', 'check', 'createPlaylist', 'addToPlaylist', 'removeFromPlaylist']>;
+  ids: z.ZodOptional<z.ZodArray<z.ZodString>>;
+  playlistId: z.ZodOptional<z.ZodString>;
+  nombre: z.ZodOptional<z.ZodString>;
+  descripcion: z.ZodOptional<z.ZodString>;
+  publica: z.ZodOptional<z.ZodBoolean>;
+  posicion: z.ZodOptional<z.ZodNumber>;
+}> = {
+  nombre: 'spotifyLibrary',
+  descripcion: 'Gestiona biblioteca y playlists: save, remove, check (canciones), createPlaylist, addToPlaylist, removeFromPlaylist',
+  esquema: {
+    accion: z.enum(['save', 'remove', 'check', 'createPlaylist', 'addToPlaylist', 'removeFromPlaylist'])
+      .describe('save/remove/check=canciones guardadas, createPlaylist, addToPlaylist, removeFromPlaylist'),
+    ids: z.array(z.string()).optional().describe('IDs de canciones (para save/remove/check/addToPlaylist) o URIs (para removeFromPlaylist)'),
+    playlistId: z.string().optional().describe('ID de playlist (para addToPlaylist/removeFromPlaylist)'),
+    nombre: z.string().optional().describe('Nombre de playlist (para createPlaylist)'),
+    descripcion: z.string().optional().describe('Descripción de playlist'),
+    publica: z.boolean().optional().describe('Si la playlist es pública'),
+    posicion: z.number().optional().describe('Posición donde insertar (para addToPlaylist)'),
+  },
+  ejecutar: async (args, _extra: ContextoExtra) => {
+    const { accion, ids, playlistId, nombre, descripcion, publica, posicion } = args;
+
+    switch (accion) {
+      case 'save': {
+        if (!ids?.length) return { content: [{ type: 'text', text: 'Error: Requiere ids' }] };
+        await ejecutarPeticion(async (api) => { await api.currentUser.tracks.saveTracks(ids); });
+        return { content: [{ type: 'text', text: `💚 ${ids.length} canción(es) guardada(s)` }] };
+      }
+
+      case 'remove': {
+        if (!ids?.length) return { content: [{ type: 'text', text: 'Error: Requiere ids' }] };
+        await ejecutarPeticion(async (api) => { await api.currentUser.tracks.removeSavedTracks(ids); });
+        return { content: [{ type: 'text', text: `🗑️ ${ids.length} canción(es) eliminada(s)` }] };
+      }
+
+      case 'check': {
+        if (!ids?.length) return { content: [{ type: 'text', text: 'Error: Requiere ids' }] };
+        const resultados = await ejecutarPeticion(async (api) => await api.currentUser.tracks.hasSavedTracks(ids));
+        const texto = ids.map((id, i) => `${id}: ${resultados[i] ? '✓ Guardada' : '✗ No guardada'}`).join('\n');
+        return { content: [{ type: 'text', text: `# Estado\n\n${texto}` }] };
+      }
+
+      case 'createPlaylist': {
+        if (!nombre) return { content: [{ type: 'text', text: 'Error: Requiere nombre' }] };
+        const resultado = await ejecutarPeticion(async (api) => {
+          const perfil = await api.currentUser.profile();
+          return await api.playlists.createPlaylist(perfil.id, { name: nombre, description: descripcion, public: publica ?? false });
+        });
+        return { content: [{ type: 'text', text: `✓ Playlist "${nombre}" creada\nID: ${resultado.id}` }] };
+      }
+
+      case 'addToPlaylist': {
+        if (!playlistId || !ids?.length) return { content: [{ type: 'text', text: 'Error: Requiere playlistId e ids' }] };
+        const uris = ids.map((id) => id.startsWith('spotify:') ? id : `spotify:track:${id}`);
+        await ejecutarPeticion(async (api) => { await api.playlists.addItemsToPlaylist(playlistId, uris, posicion); });
+        return { content: [{ type: 'text', text: `➕ ${ids.length} canción(es) agregada(s)` }] };
+      }
+
+      case 'removeFromPlaylist': {
+        if (!playlistId || !ids?.length) return { content: [{ type: 'text', text: 'Error: Requiere playlistId e ids (URIs)' }] };
+        const uris = ids.map((id) => id.startsWith('spotify:') ? id : `spotify:track:${id}`);
+        await ejecutarPeticion(async (api) => {
+          await api.playlists.removeItemsFromPlaylist(playlistId, { tracks: uris.map((uri) => ({ uri })) });
+        });
+        return { content: [{ type: 'text', text: `🗑️ ${ids.length} canción(es) eliminada(s) de playlist` }] };
+      }
+
+      default:
+        return { content: [{ type: 'text', text: '❌ Acción no válida' }] };
+    }
+  },
+};
+
+export const herramientasLibrary = [spotifyLibrary];

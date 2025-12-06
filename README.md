@@ -4,11 +4,17 @@
 
 # Spotify MCP Server
 
-Servidor MCP (Model Context Protocol) para controlar Spotify desde asistentes de IA como Claude, Cursor, etc.
+Servidor MCP (Model Context Protocol) para controlar Spotify desde asistentes de IA como Claude, Cursor, Kiro, VS Code, etc.
 
-## Instalación
+## Requisitos
 
-### 1. Clona y prepara el proyecto
+- Node.js 18+
+- Cuenta de Spotify (Premium requerido para control de reproducción)
+- Credenciales de la API de Spotify
+
+## Configuración Inicial
+
+### 1. Clonar el proyecto
 
 ```bash
 git clone https://github.com/Yonsn76/spotify-mcp.git
@@ -16,26 +22,38 @@ cd spotify-mcp
 npm install
 ```
 
-### 2. Obtén credenciales de Spotify
+### 2. Obtener credenciales de Spotify
 
 1. Ve a [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
 2. Crea una nueva aplicación
 3. Copia el **Client ID** y **Client Secret**
-4. En "Edit Settings", agrega `http://127.0.0.1:8000/callback` como Redirect URI
+4. En "Edit Settings", agrega como Redirect URI:
+   ```
+   http://127.0.0.1:8000/callback
+   ```
 
-### 3. Configura el MCP
+## Instalación
 
-Agrega esto a la configuración de tu MCP (ej: `mcp.json`):
+<details>
+<summary><strong>Kiro</strong></summary>
+
+### Opción 1: Importar Power (recomendado)
+
+1. Abre Kiro
+2. Ve al panel de **Powers**
+3. Clic en **"Import Local Power"**
+4. Selecciona la carpeta `power/` de este proyecto
+
+### Opción 2: Configuración manual
+
+Edita `.kiro/settings/mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "spotify": {
       "command": "npx",
-      "args": [
-        "tsx",
-        "RUTA/AL/PROYECTO/src/index.ts"
-      ],
+      "args": ["tsx", "RUTA/AL/PROYECTO/src/index.ts"],
       "env": {
         "SPOTIFY_CLIENT_ID": "tu_client_id",
         "SPOTIFY_CLIENT_SECRET": "tu_client_secret",
@@ -46,19 +64,22 @@ Agrega esto a la configuración de tu MCP (ej: `mcp.json`):
 }
 ```
 
-**Ejemplo real:**
+</details>
+
+<details>
+<summary><strong>VS Code</strong></summary>
+
+Edita tu archivo `mcp.json`:
+
 ```json
 {
   "mcpServers": {
     "spotify": {
       "command": "npx",
-      "args": [
-        "tsx",
-        "C:/Users/TuUsuario/Desktop/MCP/spotify-mcp-server/src/index.ts"
-      ],
+      "args": ["tsx", "RUTA/AL/PROYECTO/src/index.ts"],
       "env": {
-        "SPOTIFY_CLIENT_ID": "a787a309dbc54a64a4ca340258731cb9",
-        "SPOTIFY_CLIENT_SECRET": "tu_client_secret_aqui",
+        "SPOTIFY_CLIENT_ID": "tu_client_id",
+        "SPOTIFY_CLIENT_SECRET": "tu_client_secret",
         "SPOTIFY_REDIRECT_URI": "http://127.0.0.1:8000/callback"
       }
     }
@@ -66,85 +87,198 @@ Agrega esto a la configuración de tu MCP (ej: `mcp.json`):
 }
 ```
 
-### 4. Autentícate
+</details>
 
-Usa la herramienta `ejecutarAutenticacion` desde tu asistente de IA. Esto abrirá el navegador para iniciar sesión en Spotify.
+<details>
+<summary><strong>Cursor</strong></summary>
 
-## Herramientas Disponibles
+1. Abre Settings (`Ctrl+Shift+J` o `Cmd+Shift+J`)
+2. Ve a la sección **MCP**
+3. Agrega el servidor:
 
-### Autenticación
-| Herramienta | Descripción |
-|-------------|-------------|
-| `configurarCredenciales` | Configura Client ID y Client Secret |
-| `verificarEstado` | Verifica si estás autenticado |
-| `ejecutarAutenticacion` | Inicia el flujo OAuth automáticamente |
-| `iniciarAutenticacion` | Abre el navegador para auth manual |
-| `obtenerUrlAuth` | Obtiene la URL de autorización |
-| `cerrarSesion` | Elimina los tokens guardados |
+```json
+{
+  "mcpServers": {
+    "spotify": {
+      "command": "npx",
+      "args": ["tsx", "RUTA/AL/PROYECTO/src/index.ts"],
+      "env": {
+        "SPOTIFY_CLIENT_ID": "tu_client_id",
+        "SPOTIFY_CLIENT_SECRET": "tu_client_secret",
+        "SPOTIFY_REDIRECT_URI": "http://127.0.0.1:8000/callback"
+      }
+    }
+  }
+}
+```
 
-### Consultas
-| Herramienta | Descripción |
-|-------------|-------------|
-| `buscar` | Busca canciones, álbumes, artistas o playlists |
-| `obtenerReproduccionActual` | Info de lo que está sonando |
-| `obtenerMisPlaylists` | Lista tus playlists |
-| `obtenerCancionesPlaylist` | Canciones de una playlist |
-| `obtenerHistorial` | Canciones reproducidas recientemente |
-| `obtenerCancionesGuardadas` | Tus canciones con "Me gusta" |
-| `obtenerDispositivos` | Dispositivos disponibles |
-| `obtenerPerfil` | Tu perfil de Spotify |
-| `obtenerTopCanciones` | Tus canciones más escuchadas |
-| `obtenerTopArtistas` | Tus artistas más escuchados |
-| `obtenerCancionesAlbum` | Canciones de un álbum |
-| `obtenerTopCancionesArtista` | Top tracks de un artista |
-| `obtenerEstadoReproduccion` | Estado actual (shuffle, repeat, volumen) |
-| `obtenerCola` | Cola de reproducción actual |
+</details>
 
-### Reproducción
-| Herramienta | Descripción |
-|-------------|-------------|
-| `reproducir` | Reproduce una canción, álbum, artista o playlist |
-| `pausar` | Pausa la reproducción |
-| `reanudar` | Reanuda la reproducción |
-| `siguiente` | Salta a la siguiente canción |
-| `anterior` | Vuelve a la canción anterior |
-| `ajustarVolumen` | Ajusta el volumen (0-100) |
-| `activarAleatorio` | Activa/desactiva modo aleatorio |
-| `modoRepeticion` | Configura repetición (track/context/off) |
-| `cambiarDispositivo` | Transfiere reproducción a otro dispositivo |
-| `saltarAPosicion` | Salta a una posición específica en ms |
-| `agregarACola` | Agrega contenido a la cola |
+<details>
+<summary><strong>Claude Desktop</strong></summary>
 
-### Biblioteca
-| Herramienta | Descripción |
-|-------------|-------------|
-| `guardarCancion` | Guarda canciones en "Me gusta" |
-| `eliminarCancion` | Elimina canciones de "Me gusta" |
-| `verificarGuardadas` | Verifica si canciones están guardadas |
-| `crearPlaylist` | Crea una nueva playlist |
-| `agregarAPlaylist` | Agrega canciones a una playlist |
-| `eliminarDePlaylist` | Elimina canciones de una playlist |
+Edita el archivo de configuración:
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-## Notas Importantes
+```json
+{
+  "mcpServers": {
+    "spotify": {
+      "command": "npx",
+      "args": ["tsx", "RUTA/AL/PROYECTO/src/index.ts"],
+      "env": {
+        "SPOTIFY_CLIENT_ID": "tu_client_id",
+        "SPOTIFY_CLIENT_SECRET": "tu_client_secret",
+        "SPOTIFY_REDIRECT_URI": "http://127.0.0.1:8000/callback"
+      }
+    }
+  }
+}
+```
 
-- **Tokens**: Se guardan automáticamente en `~/.spotify-mcp-tokens.json`
-- **Spotify Premium**: Necesario para controlar la reproducción
-- **Redirect URI**: Debe ser exactamente `http://127.0.0.1:8000/callback` tanto en el Dashboard como en la configuración
-- **Puerto 8000**: Si está ocupado, el servidor de autenticación fallará. Cierra cualquier proceso que lo use.
+Reinicia Claude Desktop después de guardar.
+
+</details>
+
+<details>
+<summary><strong>Windsurf</strong></summary>
+
+Agrega a tu configuración MCP:
+
+```json
+{
+  "mcpServers": {
+    "spotify": {
+      "command": "npx",
+      "args": ["tsx", "RUTA/AL/PROYECTO/src/index.ts"],
+      "env": {
+        "SPOTIFY_CLIENT_ID": "tu_client_id",
+        "SPOTIFY_CLIENT_SECRET": "tu_client_secret",
+        "SPOTIFY_REDIRECT_URI": "http://127.0.0.1:8000/callback"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+## Autenticación
+
+Una vez configurado, usa `spotifyAuth` con `accion: "ejecutar"` desde tu asistente. Se abrirá el navegador para iniciar sesión en Spotify.
+
+
+
+## Herramientas
+
+### spotifyAuth
+
+Gestión de autenticación.
+
+| Acción | Descripción |
+|--------|-------------|
+| `configurar` | Guarda credenciales |
+| `verificar` | Verifica estado de autenticación |
+| `ejecutar` | Inicia flujo OAuth completo |
+| `iniciar` | Abre navegador para auth manual |
+| `urlAuth` | Obtiene URL de autorización |
+| `cerrar` | Cierra sesión |
+
+### spotifyPlayer
+
+Control de reproducción.
+
+| Acción | Descripción |
+|--------|-------------|
+| `play` | Reproduce contenido |
+| `pause` | Pausa |
+| `resume` | Reanuda |
+| `next` | Siguiente canción |
+| `prev` | Canción anterior |
+| `volume` | Ajusta volumen (0-100) |
+| `shuffle` | Activa/desactiva aleatorio |
+| `repeat` | Modo repetición (track/context/off) |
+| `seek` | Salta a posición en ms |
+| `queue` | Agrega a la cola |
+| `transfer` | Cambia dispositivo |
+| `playLiked` | Reproduce canciones guardadas |
+| `openApp` | Abre app de Spotify |
+
+### spotifyInfo
+
+Consultas y búsquedas.
+
+| Acción | Descripción |
+|--------|-------------|
+| `search` | Busca canciones, álbumes, artistas, playlists |
+| `nowPlaying` | Canción actual |
+| `devices` | Dispositivos disponibles |
+| `profile` | Perfil del usuario |
+| `queue` | Cola de reproducción |
+| `history` | Canciones recientes |
+| `saved` | Canciones guardadas |
+| `playlists` | Playlists del usuario |
+| `playlistTracks` | Canciones de una playlist |
+| `albumTracks` | Canciones de un álbum |
+| `artistTop` | Top tracks de un artista |
+| `topTracks` | Canciones más escuchadas |
+| `topArtists` | Artistas más escuchados |
+| `state` | Estado de reproducción |
+
+### spotifyLibrary
+
+Gestión de biblioteca.
+
+| Acción | Descripción |
+|--------|-------------|
+| `save` | Guarda canciones |
+| `remove` | Elimina canciones guardadas |
+| `check` | Verifica si están guardadas |
+| `createPlaylist` | Crea playlist |
+| `addToPlaylist` | Agrega canciones a playlist |
+| `removeFromPlaylist` | Elimina canciones de playlist |
+
+## Notas
+
+- Los tokens se guardan en `~/.spotify-mcp-tokens.json`
+- Spotify Premium es necesario para controlar la reproducción
+- El Redirect URI debe coincidir exactamente en el Dashboard y la configuración
 
 ## Solución de Problemas
 
-### Error "INVALID_CLIENT"
-- Verifica que el Client ID y Client Secret sean correctos
-- Asegúrate de que el Redirect URI en el Dashboard sea `http://127.0.0.1:8000/callback`
+<details>
+<summary><strong>Error INVALID_CLIENT</strong></summary>
 
-### Error "EADDRINUSE" (puerto ocupado)
-El puerto 8000 está en uso. En Windows, ejecuta:
+- Verifica que Client ID y Client Secret sean correctos
+- Confirma que el Redirect URI en el Dashboard sea exactamente `http://127.0.0.1:8000/callback`
+
+</details>
+
+<details>
+<summary><strong>Error EADDRINUSE (puerto ocupado)</strong></summary>
+
+El puerto 8000 está en uso.
+
+Windows:
 ```cmd
 netstat -ano | findstr :8000
 taskkill /PID <PID> /F
 ```
 
-### No se reproduce música
-- Asegúrate de tener Spotify abierto en algún dispositivo
-- Verifica que tengas Spotify Premium
+Linux/macOS:
+```bash
+lsof -i :8000
+kill -9 <PID>
+```
+
+</details>
+
+<details>
+<summary><strong>No se reproduce música</strong></summary>
+
+- Verifica que Spotify esté abierto en algún dispositivo
+- Confirma que tienes Spotify Premium
+- Usa `spotifyInfo` con `accion: "devices"` para ver dispositivos
+
+</details>
