@@ -4,27 +4,15 @@
       "command": "npx",
       "args": [
         "tsx",
-        "C:/Users/Yonsn/Desktop/MCP/spotify-mcp-server/src/index.ts"
+        "path/to/spotify-mcp-server/src/index.ts"
       ],
       "env": {
-        "SPOTIFY_CLIENT_ID": "a787a309dbc54a64a4ca340258731cb9",
-        "SPOTIFY_CLIENT_SECRET": "91b0257cb3564f3ea11109d7230515f8",
+        "SPOTIFY_CLIENT_ID": "YOUR_CLIENT_ID",
+        "SPOTIFY_CLIENT_SECRET": "YOUR_CLIENT_SECRET",
         "SPOTIFY_REDIRECT_URI": "http://127.0.0.1:8000/callback"
       },
       "disabled": false,
-      "autoApprove": [
-        "verificarEstado",
-        "iniciarAutenticacion",
-        "buscar",
-        "reproducir",
-        "obtenerDispositivos",
-        "configurarCredenciales",
-        "ejecutarAutenticacion",
-        "obtenerPerfil",
-        "obtenerCancionesGuardadas",
-        "activarAleatorio",
-        "cerrarSesion"
-      ]
+      "autoApprove": []
     }
   }
 }

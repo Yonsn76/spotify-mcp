@@ -10,6 +10,7 @@ import {
   guardarConfiguracion,
   type ConfiguracionSpotify,
 } from '../core/configuracion.js';
+import { resetearApiSpotify } from '../core/spotify.js';
 import type { ContextoExtra, Herramienta } from '../core/tipos.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -108,6 +109,9 @@ const spotifyAuth: Herramienta<{
             const timeout = setTimeout(() => { proceso.kill(); resolve({ content: [{ type: 'text', text: '⏱️ Timeout (2 min). Intenta de nuevo.' }] }); }, 120000);
             proceso.on('close', (code) => {
               clearTimeout(timeout);
+              if (code === 0) {
+                resetearApiSpotify(); // Forzar recarga de tokens
+              }
               resolve({ content: [{ type: 'text', text: code === 0 ? '✅ ¡Autenticación completada!' : `❌ Error (código ${code})\n\n${errorMsg}` }] });
             });
             proceso.on('error', (err) => { clearTimeout(timeout); resolve({ content: [{ type: 'text', text: `❌ Error: ${err.message}` }] }); });

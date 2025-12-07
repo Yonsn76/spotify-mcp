@@ -3,6 +3,11 @@ import { cargarConfiguracion } from './configuracion.js';
 
 let apiSpotify: SpotifyApi | null = null;
 
+/** Resetea el cliente de Spotify para forzar recarga de tokens */
+export function resetearApiSpotify(): void {
+  apiSpotify = null;
+}
+
 export function obtenerApiSpotify(): SpotifyApi {
   if (apiSpotify) {
     return apiSpotify;

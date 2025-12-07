@@ -9,3 +9,7 @@ dist
 .kiro
 .github
 power-kiro
+
+# Tests
+src/__tests__
+*.test.ts

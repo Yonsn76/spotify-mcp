@@ -6,7 +6,7 @@ import { ejecutarPeticion } from '../core/spotify.js';
 import type { ContextoExtra, Herramienta } from '../core/tipos.js';
 
 const spotifyLibrary: Herramienta<{
-  accion: z.ZodEnum<['save', 'remove', 'check', 'createPlaylist', 'addToPlaylist', 'removeFromPlaylist']>;
+  accion: z.ZodEnum<['save', 'remove', 'check', 'createPlaylist', 'addToPlaylist', 'removeFromPlaylist', 'deletePlaylist', 'renamePlaylist']>;
   ids: z.ZodOptional<z.ZodArray<z.ZodString>>;
   playlistId: z.ZodOptional<z.ZodString>;
   nombre: z.ZodOptional<z.ZodString>;
@@ -15,10 +15,10 @@ const spotifyLibrary: Herramienta<{
   posicion: z.ZodOptional<z.ZodNumber>;
 }> = {
   nombre: 'spotifyLibrary',
-  descripcion: 'Gestiona biblioteca y playlists: save, remove, check (canciones), createPlaylist, addToPlaylist, removeFromPlaylist',
+  descripcion: 'Gestiona biblioteca y playlists: save, remove, check (canciones), createPlaylist, addToPlaylist, removeFromPlaylist, deletePlaylist, renamePlaylist',
   esquema: {
-    accion: z.enum(['save', 'remove', 'check', 'createPlaylist', 'addToPlaylist', 'removeFromPlaylist'])
-      .describe('save/remove/check=canciones guardadas, createPlaylist, addToPlaylist, removeFromPlaylist'),
+    accion: z.enum(['save', 'remove', 'check', 'createPlaylist', 'addToPlaylist', 'removeFromPlaylist', 'deletePlaylist', 'renamePlaylist'])
+      .describe('save/remove/check=canciones guardadas, createPlaylist, addToPlaylist, removeFromPlaylist, deletePlaylist, renamePlaylist'),
     ids: z.array(z.string()).optional().describe('IDs de canciones (para save/remove/check/addToPlaylist) o URIs (para removeFromPlaylist)'),
     playlistId: z.string().optional().describe('ID de playlist (para addToPlaylist/removeFromPlaylist)'),
     nombre: z.string().optional().describe('Nombre de playlist (para createPlaylist)'),
@@ -32,13 +32,17 @@ const spotifyLibrary: Herramienta<{
     switch (accion) {
       case 'save': {
         if (!ids?.length) return { content: [{ type: 'text', text: 'Error: Requiere ids' }] };
-        await ejecutarPeticion(async (api) => { await api.currentUser.tracks.saveTracks(ids); });
+        await ejecutarPeticion(async (api) => { 
+          await api.makeRequest('PUT', 'me/tracks', { ids });
+        });
         return { content: [{ type: 'text', text: `💚 ${ids.length} canción(es) guardada(s)` }] };
       }
 
       case 'remove': {
         if (!ids?.length) return { content: [{ type: 'text', text: 'Error: Requiere ids' }] };
-        await ejecutarPeticion(async (api) => { await api.currentUser.tracks.removeSavedTracks(ids); });
+        await ejecutarPeticion(async (api) => { 
+          await api.makeRequest('DELETE', 'me/tracks', { ids });
+        });
         return { content: [{ type: 'text', text: `🗑️ ${ids.length} canción(es) eliminada(s)` }] };
       }
 
@@ -72,6 +76,23 @@ const spotifyLibrary: Herramienta<{
           await api.playlists.removeItemsFromPlaylist(playlistId, { tracks: uris.map((uri) => ({ uri })) });
         });
         return { content: [{ type: 'text', text: `🗑️ ${ids.length} canción(es) eliminada(s) de playlist` }] };
+      }
+
+      case 'deletePlaylist': {
+        if (!playlistId) return { content: [{ type: 'text', text: 'Error: Requiere playlistId' }] };
+        await ejecutarPeticion(async (api) => {
+          await api.makeRequest('DELETE', `playlists/${playlistId}/followers`);
+        });
+        return { content: [{ type: 'text', text: `🗑️ Playlist eliminada` }] };
+      }
+
+      case 'renamePlaylist': {
+        if (!playlistId) return { content: [{ type: 'text', text: 'Error: Requiere playlistId' }] };
+        if (!nombre) return { content: [{ type: 'text', text: 'Error: Requiere nombre' }] };
+        await ejecutarPeticion(async (api) => {
+          await api.makeRequest('PUT', `playlists/${playlistId}`, { name: nombre, description: descripcion });
+        });
+        return { content: [{ type: 'text', text: `✏️ Playlist renombrada a "${nombre}"` }] };
       }
 
       default:

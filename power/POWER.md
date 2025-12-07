@@ -3,7 +3,7 @@ name: "spotify"
 displayName: "Spotify Controller"
 description: "Control Spotify from your IDE - play music, manage playlists, search tracks, and control playback without leaving your code"
 keywords: ["spotify", "music", "player", "streaming", "playlist", "songs", "tracks", "albums", "artists", "audio"]
-author: "Yonsn"
+author: "Yonsn76"
 ---
 
 # Workflow

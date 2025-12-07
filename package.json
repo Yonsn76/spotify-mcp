@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
-    "auth": "tsc && node build/auth.js"
+    "auth": "tsc && node build/auth.js",
+    "test": "vitest --run"
   },
   "files": [
     "build"
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@types/node": "^22.13.8",
     "tsx": "^4.21.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^4.0.15"
   }
 }
