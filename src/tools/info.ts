@@ -21,17 +21,22 @@ const spotifyInfo: Herramienta<{
   mercado: z.ZodOptional<z.ZodString>;
 }> = {
   nombre: 'spotifyInfo',
-  descripcion: 'Busca y obtiene información: search, nowPlaying, devices, profile, queue, history, saved, playlists, playlistTracks, albumTracks, artistTop, topTracks, topArtists, state',
+  descripcion: `Busca y obtiene información de Spotify. USOS COMUNES:
+- Para reproducir música: Primero search(consulta="nombre canción", tipo="track") para obtener el ID, luego usar spotifyPlayer(play, id=ID_OBTENIDO)
+- Para verificar dispositivos antes de reproducir: devices (si "Sin dispositivos", usar spotifyPlayer openApp)
+- Para ver qué suena: nowPlaying
+- Para ver estado de reproducción: state
+NO REQUIERE dispositivo activo para búsquedas, pero sí para nowPlaying/state/queue.`,
   esquema: {
     accion: z.enum(['search', 'nowPlaying', 'devices', 'profile', 'queue', 'history', 'saved', 'playlists', 'playlistTracks', 'albumTracks', 'artistTop', 'topTracks', 'topArtists', 'state'])
-      .describe('Acción a realizar'),
-    consulta: z.string().optional().describe('Texto de búsqueda (para search)'),
-    tipo: z.enum(['track', 'album', 'artist', 'playlist']).optional().describe('Tipo de búsqueda'),
-    id: z.string().optional().describe('ID de playlist/album/artista'),
-    limite: z.number().min(1).max(50).optional().describe('Cantidad de resultados (1-50)'),
-    offset: z.number().min(0).optional().describe('Posición inicial'),
-    periodo: z.enum(['short_term', 'medium_term', 'long_term']).optional().describe('Periodo para top: short=4sem, medium=6mes, long=años'),
-    mercado: z.string().optional().describe('Código país ISO (ES, MX, US)'),
+      .describe('search=buscar(consulta+tipo), nowPlaying=canción actual, devices=listar dispositivos, profile=perfil usuario, queue=cola, history=historial, saved=guardadas, playlists=mis playlists, playlistTracks/albumTracks/artistTop=contenido por ID, topTracks/topArtists=mis favoritos'),
+    consulta: z.string().optional().describe('Texto de búsqueda (para search) - incluir artista mejora resultados'),
+    tipo: z.enum(['track', 'album', 'artist', 'playlist']).optional().describe('Tipo de búsqueda: track=canción, album, artist, playlist'),
+    id: z.string().optional().describe('ID de playlist/album/artista (para playlistTracks, albumTracks, artistTop)'),
+    limite: z.number().min(1).max(50).optional().describe('Cantidad de resultados (1-50, default: 20)'),
+    offset: z.number().min(0).optional().describe('Posición inicial para paginación'),
+    periodo: z.enum(['short_term', 'medium_term', 'long_term']).optional().describe('Periodo para topTracks/topArtists: short_term=4 semanas, medium_term=6 meses, long_term=años'),
+    mercado: z.string().optional().describe('Código país ISO para artistTop (ES, MX, US, etc)'),
   },
   ejecutar: async (args, _extra: ContextoExtra) => {
     const { accion, consulta, tipo, id, limite = 20, offset = 0, periodo = 'medium_term', mercado = 'ES' } = args;

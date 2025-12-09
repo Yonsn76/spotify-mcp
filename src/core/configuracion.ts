@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
-// Archivo para guardar tokens en home del usuario
+// Archivo para guardar tokens y credenciales en home del usuario
 const ARCHIVO_TOKENS = path.join(os.homedir(), '.spotify-mcp-tokens.json');
 
 export interface ConfiguracionSpotify {
@@ -13,12 +13,15 @@ export interface ConfiguracionSpotify {
   refreshToken?: string;
 }
 
-interface TokensGuardados {
+interface DatosGuardados {
+  clientId?: string;
+  clientSecret?: string;
+  redirectUri?: string;
   accessToken?: string;
   refreshToken?: string;
 }
 
-function cargarTokens(): TokensGuardados {
+function cargarDatosGuardados(): DatosGuardados {
   try {
     if (fs.existsSync(ARCHIVO_TOKENS)) {
       return JSON.parse(fs.readFileSync(ARCHIVO_TOKENS, 'utf8'));
@@ -29,34 +32,42 @@ function cargarTokens(): TokensGuardados {
   return {};
 }
 
-function guardarTokens(tokens: TokensGuardados): void {
-  fs.writeFileSync(ARCHIVO_TOKENS, JSON.stringify(tokens, null, 2), 'utf8');
+function guardarDatos(datos: DatosGuardados): void {
+  fs.writeFileSync(ARCHIVO_TOKENS, JSON.stringify(datos, null, 2), 'utf8');
 }
 
 export function cargarConfiguracion(): ConfiguracionSpotify {
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:8080/callback';
+  // Primero intentar cargar del archivo de tokens (configurado por LLM)
+  const datosGuardados = cargarDatosGuardados();
+  
+  // Prioridad: archivo > env vars
+  const clientId = datosGuardados.clientId || process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = datosGuardados.clientSecret || process.env.SPOTIFY_CLIENT_SECRET;
+  const redirectUri = datosGuardados.redirectUri || process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:8000/callback';
 
   if (!clientId || !clientSecret) {
     throw new Error(
-      'Faltan SPOTIFY_CLIENT_ID y/o SPOTIFY_CLIENT_SECRET en las variables de entorno del mcp.json'
+      'Credenciales no configuradas. Usa spotifyAuth con accion="configurar", clientId="tu_id", clientSecret="tu_secret"'
     );
   }
-
-  const tokens = cargarTokens();
 
   return {
     clientId,
     clientSecret,
     redirectUri,
-    accessToken: tokens.accessToken,
-    refreshToken: tokens.refreshToken,
+    accessToken: datosGuardados.accessToken,
+    refreshToken: datosGuardados.refreshToken,
   };
 }
 
 export function guardarConfiguracion(config: ConfiguracionSpotify): void {
-  guardarTokens({
+  // Guardar todo: credenciales + tokens
+  const datosActuales = cargarDatosGuardados();
+  guardarDatos({
+    ...datosActuales,
+    clientId: config.clientId,
+    clientSecret: config.clientSecret,
+    redirectUri: config.redirectUri,
     accessToken: config.accessToken,
     refreshToken: config.refreshToken,
   });

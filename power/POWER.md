@@ -6,70 +6,134 @@ keywords: ["spotify", "music", "player", "streaming", "playlist", "songs", "trac
 author: "Yonsn76"
 ---
 
-# Workflow
+# Spotify MCP Power
 
-Execute this file to set up Spotify control in Kiro.
+Control Spotify directly from your IDE using natural language commands.
 
-## Step 1: Authentication Setup
+## Initial Setup
 
-First, verify if you're already authenticated with Spotify:
+### Step 1: Get Spotify Credentials
 
-1. Call the `verificarEstado` tool to check authentication status
-2. If not authenticated, call `ejecutarAutenticacion` to start the OAuth flow
-3. A browser window will open - log in to Spotify and authorize the app
+1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Create a new application
+3. Copy the Client ID and Client Secret
+4. Add `http://127.0.0.1:8000/callback` as Redirect URI in app settings
 
-## Step 2: Create a Playback Control Hook
+### Step 2: Configure Credentials
 
-Create a hook for quick music control while coding. Save the hook in `.kiro/hooks/spotify-control.kiro.hook`:
+Option A: Add to mcp.json env variables (recommended for initial setup)
 
-```json
-{
-  "enabled": true,
-  "name": "Spotify Quick Control",
-  "description": "Control Spotify playback with voice commands",
-  "version": "1",
-  "when": {
-    "type": "manual"
-  },
-  "then": {
-    "type": "askAgent",
-    "prompt": "Ask the user what they want to do with Spotify: play/pause, next/previous track, search for music, or check what's playing. Execute the appropriate Spotify tool based on their response."
-  },
-  "shortName": "spotify"
-}
+Option B: Ask the assistant to configure:
+```
+Configure Spotify with clientId="your_id" and clientSecret="your_secret"
 ```
 
-# Spotify MCP Integration Guidelines
+### Step 3: Authenticate
 
-- Always check `verificarEstado` before attempting playback operations to ensure authentication is valid
-- Use `obtenerDispositivos` to verify an active Spotify device is available before playing music
-- When searching, use specific queries - include artist name for better results
-- Spotify Premium is required for playback control features
-- Tokens are stored in `~/.spotify-mcp-tokens.json` and refresh automatically
-- The redirect URI must be exactly `http://127.0.0.1:8000/callback` in both Spotify Dashboard and config
+Ask the assistant to run authentication:
+```
+Authenticate with Spotify
+```
 
-# Available Tools
+## Important Notes
 
-## Authentication
-- `verificarEstado` - Check if authenticated
-- `ejecutarAutenticacion` - Start OAuth flow
-- `cerrarSesion` - Log out
+### Active Playback Session Required
 
-## Playback Control
-- `reproducir` - Play track/album/playlist/artist
-- `pausar` / `reanudar` - Pause/resume playback
-- `siguiente` / `anterior` - Next/previous track
-- `ajustarVolumen` - Set volume (0-100)
-- `activarAleatorio` - Toggle shuffle
-- `modoRepeticion` - Set repeat mode (track/context/off)
+Spotify requires an active playback session for player controls to work. If you just opened Spotify without playing anything:
 
-## Search & Discovery
-- `buscar` - Search tracks, albums, artists, playlists
-- `obtenerReproduccionActual` - Get current track info
-- `obtenerTopCanciones` / `obtenerTopArtistas` - Your top items
-- `obtenerHistorial` - Recently played
+1. The tools may not respond correctly
+2. Solution: Manually play any song in Spotify first
+3. Once music is playing (even if paused), all tools will work
 
-## Library Management
-- `guardarCancion` / `eliminarCancion` - Manage liked songs
-- `crearPlaylist` - Create new playlist
-- `agregarAPlaylist` / `eliminarDePlaylist` - Manage playlist tracks
+### Recommended Flow for Playing Music
+
+1. Check devices: `spotifyInfo(accion="devices")`
+2. If no devices: `spotifyPlayer(accion="openApp")`
+3. Wait for Spotify to load and manually play something
+4. Search content: `spotifyInfo(accion="search", consulta="...", tipo="track")`
+5. Play: `spotifyPlayer(accion="play", tipo="track", id="ID_FROM_SEARCH")`
+
+## Available Tools
+
+### spotifyAuth - Authentication Management
+
+| Action | Description |
+|--------|-------------|
+| `verificar` | Check authentication status (use first) |
+| `configurar` | Save clientId and clientSecret |
+| `ejecutar` | Complete OAuth flow automatically |
+| `urlAuth` | Get authorization URL |
+| `cerrar` | Logout |
+
+### spotifyPlayer - Playback Control
+
+| Action | Parameters | Description |
+|--------|------------|-------------|
+| `play` | tipo, id or uri | Play content |
+| `pause` | - | Pause playback |
+| `resume` | - | Resume playback |
+| `next` | - | Next track |
+| `prev` | - | Previous track |
+| `volume` | valor (0-100) | Set volume |
+| `shuffle` | valor (bool) | Toggle shuffle |
+| `repeat` | valor (track/context/off) | Set repeat mode |
+| `seek` | valor (ms) | Seek to position |
+| `queue` | tipo, id or uri | Add to queue |
+| `transfer` | dispositivo | Transfer playback |
+| `playLiked` | valor (bool=shuffle) | Play liked songs |
+| `openApp` | valor (bool=web) | Open Spotify app |
+
+### spotifyInfo - Search and Information
+
+| Action | Parameters | Description |
+|--------|------------|-------------|
+| `search` | consulta, tipo | Search content |
+| `nowPlaying` | - | Current track |
+| `devices` | - | List devices |
+| `profile` | - | User profile |
+| `queue` | - | Playback queue |
+| `history` | limite | Recent tracks |
+| `saved` | limite, offset | Saved tracks |
+| `playlists` | limite | User playlists |
+| `playlistTracks` | id, limite | Playlist tracks |
+| `albumTracks` | id, limite | Album tracks |
+| `artistTop` | id, mercado | Artist top tracks |
+| `topTracks` | periodo, limite | Your top tracks |
+| `topArtists` | periodo, limite | Your top artists |
+| `state` | - | Playback state |
+
+### spotifyLibrary - Library Management
+
+| Action | Parameters | Description |
+|--------|------------|-------------|
+| `save` | ids | Save tracks to library |
+| `remove` | ids | Remove from library |
+| `check` | ids | Check if saved |
+| `createPlaylist` | nombre, descripcion | Create playlist |
+| `addToPlaylist` | playlistId, ids | Add to playlist |
+| `removeFromPlaylist` | playlistId, ids | Remove from playlist |
+
+## Troubleshooting
+
+### Tools not responding
+
+If no player tools work:
+1. Open Spotify manually
+2. Play any song
+3. Tools should now work
+
+### No active device
+
+1. Check devices with `spotifyInfo(accion="devices")`
+2. If none, open Spotify with `spotifyPlayer(accion="openApp")`
+3. Manually play something to activate the session
+
+### Premium required
+
+Playback control requires Spotify Premium. Search and info functions work with free accounts.
+
+## Storage
+
+- Credentials and tokens are stored in `~/.spotify-mcp-tokens.json`
+- Tokens refresh automatically
+- Redirect URI must match exactly in Dashboard and config

@@ -32,13 +32,17 @@ const spotifyAuth: Herramienta<{
   redirectUri: z.ZodOptional<z.ZodString>;
 }> = {
   nombre: 'spotifyAuth',
-  descripcion: 'Gestiona la autenticación de Spotify: configurar credenciales, verificar estado, iniciar/ejecutar auth, cerrar sesión',
+  descripcion: `Gestiona autenticación de Spotify. FLUJO RECOMENDADO:
+1. Si error "Credenciales no configuradas": Pide al usuario clientId y clientSecret (de https://developer.spotify.com/dashboard) o que los agregue en env del mcp.json, luego usa accion="configurar"
+2. Después de configurar: Usa accion="ejecutar" para completar OAuth (abre navegador automáticamente)
+3. Si el usuario no puede autorizar: Usa accion="urlAuth" para darle el link manual
+IMPORTANTE: Las credenciales se guardan en ~/.spotify-mcp-tokens.json junto con los tokens de sesión`,
   esquema: {
     accion: z.enum(['configurar', 'verificar', 'iniciar', 'ejecutar', 'urlAuth', 'cerrar'])
-      .describe('configurar=guardar credenciales, verificar=ver estado, iniciar=abrir navegador, ejecutar=completar OAuth, urlAuth=obtener URL, cerrar=logout'),
-    clientId: z.string().optional().describe('Client ID (solo para configurar)'),
-    clientSecret: z.string().optional().describe('Client Secret (solo para configurar)'),
-    redirectUri: z.string().optional().describe('Redirect URI (solo para configurar, default: http://127.0.0.1:8000/callback)'),
+      .describe('verificar=comprobar estado (USAR PRIMERO), configurar=guardar clientId+clientSecret, ejecutar=completar OAuth automático, urlAuth=obtener URL manual, cerrar=logout'),
+    clientId: z.string().optional().describe('Client ID de Spotify Developer Dashboard (solo para configurar)'),
+    clientSecret: z.string().optional().describe('Client Secret de Spotify Developer Dashboard (solo para configurar)'),
+    redirectUri: z.string().optional().describe('Redirect URI (default: http://127.0.0.1:8000/callback) - debe coincidir con Spotify Dashboard'),
   },
   ejecutar: async (args, _extra: ContextoExtra) => {
     const { accion } = args;
@@ -66,14 +70,14 @@ const spotifyAuth: Herramienta<{
           const tieneTokens = !!(config.accessToken && config.refreshToken && config.accessToken !== 'run-npm auth to get this');
           let estado = '# Estado de Autenticación\n\n';
           if (!tieneCredenciales) {
-            estado += '❌ **Credenciales**: No configuradas\n\nUsa accion="configurar" con clientId y clientSecret.';
+            estado += '❌ **Credenciales**: No configuradas\n\nSIGUIENTE: Pide al usuario su clientId y clientSecret de https://developer.spotify.com/dashboard (o que los agregue en env del mcp.json), luego usa spotifyAuth(accion="configurar", clientId="...", clientSecret="...")';
           } else {
             estado += `✓ **Credenciales**: Configuradas\n  - Client ID: ${config.clientId.substring(0, 8)}...${config.clientId.slice(-4)}\n\n`;
-            estado += tieneTokens ? '✓ **Sesión**: Conectado' : '❌ **Sesión**: No conectado\n\nUsa accion="ejecutar" para conectar.';
+            estado += tieneTokens ? '✓ **Sesión**: Conectado y listo para usar' : '❌ **Sesión**: No conectado\n\nSIGUIENTE: Usa spotifyAuth(accion="ejecutar") para completar OAuth automáticamente.';
           }
           return { content: [{ type: 'text', text: estado }] };
         } catch {
-          return { content: [{ type: 'text', text: '❌ Sin configurar. Usa accion="configurar" primero.' }] };
+          return { content: [{ type: 'text', text: '❌ Sin configurar. SIGUIENTE: Pide al usuario clientId y clientSecret de https://developer.spotify.com/dashboard, luego usa spotifyAuth(accion="configurar", clientId="...", clientSecret="...")' }] };
         }
       }
 

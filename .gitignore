@@ -3,7 +3,6 @@ node_modules
 .env
 package-lock.json
 sp-credentials.json
-build
 dist
 .DS_Store
 .kiro

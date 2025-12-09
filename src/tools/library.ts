@@ -15,16 +15,21 @@ const spotifyLibrary: Herramienta<{
   posicion: z.ZodOptional<z.ZodNumber>;
 }> = {
   nombre: 'spotifyLibrary',
-  descripcion: 'Gestiona biblioteca y playlists: save, remove, check (canciones), createPlaylist, addToPlaylist, removeFromPlaylist, deletePlaylist, renamePlaylist',
+  descripcion: `Gestiona biblioteca y playlists del usuario. FLUJOS COMUNES:
+- Guardar canción actual: Primero spotifyInfo(nowPlaying) para obtener ID, luego save(ids=[ID])
+- Crear playlist con canciones: 1) createPlaylist(nombre="Mi Playlist"), 2) addToPlaylist(playlistId=ID_PLAYLIST, ids=[IDs de canciones])
+- Ver playlists del usuario: spotifyInfo(playlists)
+- Ver canciones de playlist: spotifyInfo(playlistTracks, id=PLAYLIST_ID)
+NOTA: Los IDs de canciones se obtienen de spotifyInfo(search) o spotifyInfo(nowPlaying).`,
   esquema: {
     accion: z.enum(['save', 'remove', 'check', 'createPlaylist', 'addToPlaylist', 'removeFromPlaylist', 'deletePlaylist', 'renamePlaylist'])
-      .describe('save/remove/check=canciones guardadas, createPlaylist, addToPlaylist, removeFromPlaylist, deletePlaylist, renamePlaylist'),
-    ids: z.array(z.string()).optional().describe('IDs de canciones (para save/remove/check/addToPlaylist) o URIs (para removeFromPlaylist)'),
-    playlistId: z.string().optional().describe('ID de playlist (para addToPlaylist/removeFromPlaylist)'),
-    nombre: z.string().optional().describe('Nombre de playlist (para createPlaylist)'),
-    descripcion: z.string().optional().describe('Descripción de playlist'),
-    publica: z.boolean().optional().describe('Si la playlist es pública'),
-    posicion: z.number().optional().describe('Posición donde insertar (para addToPlaylist)'),
+      .describe('save=guardar en Me gusta, remove=quitar de Me gusta, check=verificar si guardada, createPlaylist, addToPlaylist, removeFromPlaylist, deletePlaylist, renamePlaylist'),
+    ids: z.array(z.string()).optional().describe('Array de IDs de canciones (obtener de spotifyInfo search/nowPlaying)'),
+    playlistId: z.string().optional().describe('ID de playlist (obtener de spotifyInfo playlists)'),
+    nombre: z.string().optional().describe('Nombre para createPlaylist o renamePlaylist'),
+    descripcion: z.string().optional().describe('Descripción de playlist (opcional)'),
+    publica: z.boolean().optional().describe('Si la playlist es pública (default: false)'),
+    posicion: z.number().optional().describe('Posición donde insertar canciones en playlist (0=inicio)'),
   },
   ejecutar: async (args, _extra: ContextoExtra) => {
     const { accion, ids, playlistId, nombre, descripcion, publica, posicion } = args;
