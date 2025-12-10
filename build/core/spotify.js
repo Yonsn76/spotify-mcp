@@ -56,7 +56,7 @@ export async function ejecutarPeticionPlayer(accion, accionNombre) {
         }
         // Errores comunes de Spotify con guías de siguiente paso
         if (mensaje.includes('No active device') || mensaje.includes('Player command failed: No active device')) {
-            return { ok: false, error: '📵 No hay dispositivo activo. SIGUIENTE: Usa spotifyInfo(accion="devices") para verificar dispositivos. Si no hay ninguno, usa spotifyPlayer(accion="openApp") para abrir Spotify. IMPORTANTE: Después de abrir, pide al usuario que REPRODUZCA MANUALMENTE cualquier canción para activar la sesión del reproductor. Una vez que haya música sonando, las herramientas funcionarán.' };
+            return { ok: false, error: '📵 No hay dispositivo activo. SIGUIENTE: 1) Usa spotifyInfo(accion="devices") para obtener lista de dispositivos. 2) Si hay dispositivos, usa spotifyPlayer(accion="transfer", dispositivo="ID_DEL_DISPOSITIVO") para activar uno. 3) Si no hay dispositivos, usa spotifyPlayer(accion="openApp") para abrir Spotify, espera a que cargue, luego repite desde el paso 1. 4) Si transfer falla, pide al usuario que reproduzca algo manualmente en Spotify para activar la sesion.' };
         }
         if (mensaje.includes('Restriction violated') || mensaje.includes('PREMIUM_REQUIRED')) {
             return { ok: false, error: '⭐ Se requiere Spotify Premium para controlar reproducción. El usuario necesita una cuenta Premium para usar play/pause/next/prev/volume/etc.' };

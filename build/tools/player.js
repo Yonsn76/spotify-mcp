@@ -5,12 +5,12 @@ import { ejecutarPeticionPlayer } from '../core/spotify.js';
 const execAsync = promisify(exec);
 const spotifyPlayer = {
     nombre: 'spotifyPlayer',
-    descripcion: `Controla reproducción de Spotify. MANEJO DE ERRORES:
-- Si NINGUNA acción funciona (play, pause, next, etc. todas fallan): Pide al usuario que MANUALMENTE reproduzca cualquier canción en Spotify primero. Esto activa la sesión del reproductor. Una vez que haya música sonando (aunque sea pausada), las herramientas funcionarán.
-- Si error "No hay dispositivo activo": Usa spotifyInfo(accion="devices") para verificar. Si no hay dispositivos, usa spotifyPlayer(accion="openApp") para abrir Spotify desktop. Si falla, usa openApp con valor=true para abrir Spotify Web. Después de abrir, pide al usuario que espere a que cargue y REPRODUZCA algo manualmente.
-- Si error "Premium requerido": Informa al usuario que necesita Spotify Premium para controlar reproducción.
-- Para reproducir: Primero busca con spotifyInfo(accion="search"), luego usa el ID obtenido con play.
-IMPORTANTE: Spotify requiere que haya una sesión de reproducción activa. Si el usuario acaba de abrir Spotify sin reproducir nada, las herramientas no funcionarán hasta que reproduzca algo manualmente.`,
+    descripcion: `Controla reproduccion de Spotify. MANEJO DE ERRORES:
+- Si error "No hay dispositivo activo": 1) Usa spotifyInfo(accion="devices") para obtener lista. 2) Si hay dispositivos, usa spotifyPlayer(accion="transfer", dispositivo="ID") para activarlo y luego reintenta play. 3) Si no hay dispositivos, usa spotifyPlayer(accion="openApp"), espera que cargue, repite desde paso 1.
+- Si transfer falla o no hay dispositivos despues de abrir: Pide al usuario que reproduzca algo manualmente en Spotify para activar la sesion.
+- Si error "Premium requerido": Informa que necesita Spotify Premium.
+- Para reproducir: Primero busca con spotifyInfo(accion="search"), luego usa el ID con play.
+FLUJO RECOMENDADO cuando no reproduce: devices -> transfer(dispositivo=ID) -> play. Si falla, openApp -> esperar -> devices -> transfer -> play.`,
     esquema: {
         accion: z.enum(['play', 'pause', 'resume', 'next', 'prev', 'volume', 'shuffle', 'repeat', 'seek', 'queue', 'transfer', 'playLiked', 'openApp'])
             .describe('play=reproducir(uri o tipo+id), pause/resume, next/prev, volume(valor:0-100), shuffle(valor:bool), repeat(valor:track/context/off), seek(valor:ms), queue=agregar a cola, transfer=cambiar dispositivo, playLiked=reproducir Me gusta, openApp=abrir Spotify(valor:true=web)'),
